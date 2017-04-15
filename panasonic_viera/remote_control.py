@@ -1,14 +1,20 @@
 # -*- coding: utf8 -*-
 
 # Systems imports
+from email.parser import Parser as HeadersParser
 import socket
 import sys
 import xml.etree.ElementTree as xml_elm
 if sys.version_info[0] == 3:
     from urllib.request import urlopen, Request, URLError, HTTPError
+    from socketserver import UDPServer, BaseRequestHandler
+    from io import StringIO
 else:
     from urllib2 import urlopen, Request, URLError, HTTPError
+    from SocketServer import UDPServer, BaseRequestHandler
+    from StringIO import StringIO
 
+# Project imports
 from .constants import Keys
 from .utils import getLogger
 from .exceptions import RemoteControlException, UserControlException
@@ -24,6 +30,12 @@ URL_CONTROL_NRC = 'nrc/control_0'
 
 DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 2
+DEFAULT_FIND_TIMEOUT = 3
+
+DEFAULT_FIND_LOCAL_PORT = 60000
+DEFAULT_FIND_MULTICAST_ADDRESS = "239.255.255.250"
+DEFAULT_FIND_MULTICAST_PORT = 1900
+
 
 class RemoteControl:
     """This is a remote control client
@@ -35,6 +47,54 @@ class RemoteControl:
         self.__host = host
         self.__port = port
         self.__timeout = timeout
+
+    def find(self):
+        """Find a TV on the network
+
+        @return [list] the list of discovered TVs
+            This list contains a dict per TV
+            Each dict contains at least the 'address' key which contains the TV's IP address
+        """
+        tvs = []
+        udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        udpsock.settimeout(DEFAULT_FIND_TIMEOUT)
+        udpsock.setsockopt(socket.IPPROTO_IP, socket.SO_REUSEADDR, True)
+        udpsock.bind((str(socket.INADDR_ANY), DEFAULT_FIND_LOCAL_PORT))
+        udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(DEFAULT_FIND_MULTICAST_ADDRESS) + socket.inet_aton(str(socket.INADDR_ANY)))
+        udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+        udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
+        g_logger.debug("UDP Multicast socket ready on request on %s : %d", socket.INADDR_ANY, DEFAULT_FIND_LOCAL_PORT)
+
+        find_body = (
+            'M-SEARCH * HTTP/1.1\r\n'
+            'HOST:{address}:{port}\r\n'
+            'MAN:"ssdp:discover"\r\n'
+            'ST:urn:panasonic-com:device:p00RemoteController:1\r\n'
+            'MX:1\r\n\r\n'
+        ).format(address=DEFAULT_FIND_MULTICAST_ADDRESS, port=DEFAULT_FIND_MULTICAST_PORT).encode('utf-8')
+
+        try:
+            g_logger.debug("Sending multicast discovery request")
+            udpsock.sendto(find_body, (DEFAULT_FIND_MULTICAST_ADDRESS, DEFAULT_FIND_MULTICAST_PORT))
+            g_logger.debug("Listen for incoming discovery replies")
+            while True:
+                data, addr = udpsock.recvfrom(2048)
+                request, head = data.decode().split('\r\n', 1)
+                g_logger.debug("Received message from %s : '''%s'''", addr, head)
+
+                headers = HeadersParser().parsestr(head, True)
+                tv = dict()
+                tv['address'] = addr[0]
+                tv['discovery'] = dict(headers.items())
+                tvs.append(tv)
+                g_logger.info("Found TV %s", tv['address'])
+        except (socket.timeout) as e:
+            g_logger.info(str(e))
+            g_logger.info("no more TV's found")
+        except (socket.error, URLError) as e:
+            g_logger.fatal(str(e))
+        udpsock.close()
+        return tvs
 
     def soap_request(self, url, urn, action, params):
         """Send a SOAP request to the TV.
@@ -64,7 +124,7 @@ class RemoteControl:
 
         url = 'http://{}:{}/{}'.format(self.__host, self.__port, url)
 
-        g_logger.debug("Sending request to %s: with headers : %s and body : %s", url, headers, soap_body)
+        g_logger.debug("Sending request to %s: with headers : %s and body : '''%s'''", url, headers, soap_body)
         req = Request(url, soap_body, headers)
 
         try:
@@ -75,7 +135,7 @@ class RemoteControl:
         except (socket.error, socket.timeout, URLError) as e:
             g_logger.fatal(str(e))
             raise RemoteControlException("The TV is unreacheable.")
-        g_logger.debug("Receveid response: %s", res)
+        g_logger.debug("Receveid response: '''%s'''", res)
         return res
 
     def send_key(self, key):
