@@ -89,8 +89,8 @@ class RemoteControl:
                 tvs.append(tv)
                 g_logger.info("Found TV %s", tv['address'])
         except (socket.timeout) as e:
-            g_logger.info(str(e))
-            g_logger.info("no more TV's found")
+            g_logger.debug(str(e))
+            g_logger.info("No more TV's found")
         except (socket.error, URLError) as e:
             g_logger.fatal(str(e))
         udpsock.close()
