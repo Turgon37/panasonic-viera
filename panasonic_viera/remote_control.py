@@ -41,7 +41,7 @@ class RemoteControl:
     """This is a remote control client
     """
 
-    def __init__(self, host, port=DEFAULT_PORT, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, host=None, port=DEFAULT_PORT, timeout=DEFAULT_TIMEOUT):
         """Default constructor
         """
         self.__host = host
@@ -145,6 +145,8 @@ class RemoteControl:
 
         @param [str] key a predefined keys from Keys enum
         """
+        if self.__host is None:
+            raise UserControlException("You must set the host value to used this feature.")
         if isinstance(key, Keys):
             key = key.value
         params = '<X_KeyEvent>{}</X_KeyEvent>'.format(key)
