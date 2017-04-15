@@ -1,5 +1,9 @@
 
-from enum import Enum
+import sys
+if sys.version_info[0] == 3:
+    from enum import Enum
+else:
+    Enum = object
 
 
 class Keys(Enum):
@@ -32,7 +36,6 @@ class Keys(Enum):
     INTERNET = 'NRC_INTERNET-ONOFF'
     LAST_VIEW = 'NRC_R_TUNE-ONOFF'
     LEFT = 'NRC_LEFT-ONOFF'
-    LINK = 'NRC_VIERA_LINK-ONOFF'
     MENU = 'NRC_MENU-ONOFF'
     MPX = 'NRC_MPX-ONOFF'
     MUTE = 'NRC_MUTE-ONOFF'
@@ -80,5 +83,6 @@ class Keys(Enum):
     UP = 'NRC_UP-ONOFF'
     VOLUME_DOWN = 'NRC_VOLDOWN-ONOFF'
     VOLUME_UP = 'NRC_VOLUP-ONOFF'
-    VTOOLS = 'NRC_VTOOLS-ONOFF'
+    VIERA_LINK = 'NRC_VIERA_LINK-ONOFF'
+    VIERA_TOOLS = 'NRC_VTOOLS-ONOFF'
     YELLOW = 'NRC_YELLOW-ONOFF'
