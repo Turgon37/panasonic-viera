@@ -102,6 +102,8 @@ class RemoteControl:
         @param [str] url  the query part of the url
         @param [str] urn  the resource identifier
         @param [str] params other query params
+
+        @return [str] the response body
         """
         soap_body = (
             '<?xml version="1.0" encoding="utf-8"?>'
@@ -135,7 +137,7 @@ class RemoteControl:
         except (socket.error, socket.timeout, URLError) as e:
             g_logger.fatal(str(e))
             raise RemoteControlException("The TV is unreacheable.")
-        g_logger.debug("Receveid response: '''%s'''", res)
+        g_logger.debug("Received response: '''%s'''", res)
         return res
 
     def send_key(self, key):
