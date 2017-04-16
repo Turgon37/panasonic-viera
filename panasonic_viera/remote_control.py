@@ -80,7 +80,7 @@ class RemoteControl:
             while True:
                 data, addr = udpsock.recvfrom(2048)
                 request, head = data.decode().split('\r\n', 1)
-                g_logger.debug("Received message from %s : '''%s'''", addr, head)
+                g_logger.debug("Received response from %s : '''%s'''", addr, head)
 
                 headers = HeadersParser().parsestr(head, True)
                 tv = dict()
@@ -137,7 +137,10 @@ class RemoteControl:
         except (socket.error, socket.timeout, URLError) as e:
             g_logger.fatal(str(e))
             raise RemoteControlException("The TV is unreacheable.")
-        g_logger.debug("Received response: '''%s'''", res)
+        if sys.version_info[0] == 3:
+            g_logger.debug("Received response: '''%s'''", res.decode())
+        else:
+            g_logger.debug("Received response: '''%s'''", res)
         return res
 
     def send_key(self, key):
