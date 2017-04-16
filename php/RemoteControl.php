@@ -105,7 +105,7 @@ class RemoteControl {
      * @param [str] params other query params
      * @return [str] the response body
      */
-    public function soap_request($url, $urn, $action, $params) {
+    public function soapRequest($url, $urn, $action, $params) {
         $soap_body = sprintf(
             '<?xml version="1.0" encoding="utf-8"?>' . 
             '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"' .
@@ -151,12 +151,12 @@ class RemoteControl {
      * 
      * @param [str] key a predefined keys from Keys enum
      */
-    public function send_key($key) {
+    public function sendKey($key) {
         if ($this->host === null) {
             throw new UserControlException("You must set the host value to used this feature.");
         }
         $params = sprintf('<X_KeyEvent>%s</X_KeyEvent>', $key);
-        $this->soap_request(URL_CONTROL_NRC, URN_REMOTE_CONTROL,
+        $this->soapRequest(URL_CONTROL_NRC, URN_REMOTE_CONTROL,
                           'X_SendKey', $params);
     }
     
@@ -165,9 +165,9 @@ class RemoteControl {
      * 
      * @return [int] the volume value
      */
-    public function get_volume() {
+    public function getVolume() {
         $params = '<InstanceID>0</InstanceID><Channel>Master</Channel>';
-        $res = $this->soap_request(URL_CONTROL_DMR,
+        $res = $this->soapRequest(URL_CONTROL_DMR,
                                     URN_RENDERING_CONTROL,
                                     'GetVolume',
                                     $params);
@@ -187,13 +187,13 @@ class RemoteControl {
      * 
      * @param [int] the new value for volume
      */
-    public function set_volume($volume) {
+    public function setVolume($volume) {
         if ($volume < 0 || $volume > 100) {
             throw new UserControlException("Bad value for volume control. It must be between 0 and 100.");
         }
         $params = sprintf('<InstanceID>0</InstanceID><Channel>Master</Channel>' .
                            '<DesiredVolume>%s</DesiredVolume>', $volume);
-        $this->soap_request(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
+        $this->soapRequest(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
                           'SetVolume', $params);
     }
 
@@ -202,9 +202,9 @@ class RemoteControl {
      * 
      * @return [bool] the mute status
      */
-    public function get_mute() {
+    public function getMute() {
         $params = '<InstanceID>0</InstanceID><Channel>Master</Channel>';
-        $res = $this->soap_request(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
+        $res = $this->soapRequest(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
                                 'GetMute', $params);
         $elm = simplexml_load_string($res);
         if ($elm === FALSE) {
@@ -222,7 +222,7 @@ class RemoteControl {
      * 
      * @param [bool] true if mute must be enabled, false if not
      */
-    public function set_mute($enable) {
+    public function setMute($enable) {
         if (boolval($enable)) {
             $data = '1';
         } else {
@@ -230,7 +230,7 @@ class RemoteControl {
         }
         $params = sprintf('<InstanceID>0</InstanceID><Channel>Master</Channel>' .
                   '<DesiredMute>%s</DesiredMute>', $data);
-        $this->soap_request(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
+        $this->soapRequest(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
                           'SetMute', $params);
     }
 }

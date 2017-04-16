@@ -96,7 +96,7 @@ class RemoteControl:
         udpsock.close()
         return tvs
 
-    def soap_request(self, url, urn, action, params):
+    def soapRequest(self, url, urn, action, params):
         """Send a SOAP request to the TV.
 
         @param [str] url  the query part of the url
@@ -120,7 +120,7 @@ class RemoteControl:
         headers = {
             'Host': '{}:{}'.format(self.__host, self.__port),
             'Content-Length': len(soap_body),
-            'Content-Type': 'text/xml; charset=utf-8"',
+            'Content-Type': 'text/xml; charset="utf-8"',
             'SOAPAction': '"urn:{}#{}"'.format(urn, action),
         }
 
@@ -143,7 +143,7 @@ class RemoteControl:
             g_logger.debug("Received response: '''%s'''", res)
         return res
 
-    def send_key(self, key):
+    def sendKey(self, key):
         """Send a key command to the TV.
 
         @param [str] key a predefined keys from Keys enum
@@ -154,50 +154,49 @@ class RemoteControl:
             key = key.value
         params = '<X_KeyEvent>{}</X_KeyEvent>'.format(key)
         g_logger.info("Send Key %s to %s", key, self.__host)
-        self.soap_request(URL_CONTROL_NRC, URN_REMOTE_CONTROL,
+        self.soapRequest(URL_CONTROL_NRC, URN_REMOTE_CONTROL,
                           'X_SendKey', params)
 
-    def get_volume(self):
+    def getVolume(self):
         """Return the current volume level.
 
         @return [int] the volume value
         """
         params = '<InstanceID>0</InstanceID><Channel>Master</Channel>'
         g_logger.info("Send GetVolume request to %s", self.__host)
-        res = self.soap_request(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
+        res = self.soapRequest(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
                                 'GetVolume', params)
         root = xml_elm.fromstring(res)
         el_volume = root.find('.//CurrentVolume')
         return int(el_volume.text)
 
-    def set_volume(self, volume):
+    def setVolume(self, volume):
         """Set a new volume level
 
         @param [int] the new value for volume
         """
         if volume > 100 or volume < 0:
-            raise Exception('Bad request to volume control. '
-                            'Must be between 0 and 100')
+            raise UserControlException("Bad value for volume control. It must be between 0 and 100.")
         params = ('<InstanceID>0</InstanceID><Channel>Master</Channel>'
                   '<DesiredVolume>{}</DesiredVolume>').format(volume)
         g_logger.info("Send SetVolume request to %s", self.__host)
-        self.soap_request(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
+        self.soapRequest(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
                           'SetVolume', params)
 
-    def get_mute(self):
+    def getMute(self):
         """Return if the TV is muted
 
         @return [bool] the mute status
         """
         params = '<InstanceID>0</InstanceID><Channel>Master</Channel>'
         g_logger.info("Send GetMute request to %s", self.__host)
-        res = self.soap_request(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
+        res = self.soapRequest(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
                                 'GetMute', params)
         root = xml_elm.fromstring(res)
         el_mute = root.find('.//CurrentMute')
         return el_mute.text != '0'
 
-    def set_mute(self, enable):
+    def setMute(self, enable):
         """Mute or unmute the TV.
 
         @param [bool] true if mute must be enabled, false if not
@@ -206,5 +205,5 @@ class RemoteControl:
         params = ('<InstanceID>0</InstanceID><Channel>Master</Channel>'
                   '<DesiredMute>{}</DesiredMute>').format(data)
         g_logger.info("Send SetMute request to %s", self.__host)
-        self.soap_request(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
+        self.soapRequest(URL_CONTROL_DMR, URN_RENDERING_CONTROL,
                           'SetMute', params)
