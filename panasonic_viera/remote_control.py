@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 # Systems imports
+import csv
 from email.parser import Parser as HeadersParser
 import socket
 import sys
@@ -65,6 +66,15 @@ class RemoteControl:
         udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
         g_logger.debug("UDP Multicast socket ready on request on %s : %d", socket.INADDR_ANY, multicast_localport)
 
+        arps = dict()
+        try:
+            f_arp = open('/proc/net/arp', 'r')
+            for row in csv.DictReader(f_arp, delimiter=' '):
+                arps[row['IP']] = row['HW']
+            g_logger.debug("Initialized ARP mapping table from file : %s : with %d addresses", '/proc/net/arp', len(arps))
+        except:
+            g_logger.warning("Unable to access Prepare ARP mapping table from file : %s", '/proc/net/arp')
+
         find_body = (
             'M-SEARCH * HTTP/1.1\r\n'
             'HOST:{address}:{port}\r\n'
@@ -85,6 +95,10 @@ class RemoteControl:
                 headers = HeadersParser().parsestr(head, True)
                 tv = dict()
                 tv['address'] = addr[0]
+                if tv['address'] in arps:
+                    tv['mac'] = arps[tv['address']]
+                else:
+                    tv['mac'] = None
                 tv['discovery'] = dict(headers.items())
                 tvs.append(tv)
                 g_logger.info("Found TV %s", tv['address'])
