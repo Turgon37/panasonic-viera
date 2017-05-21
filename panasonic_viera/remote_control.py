@@ -48,7 +48,7 @@ class RemoteControl:
         self.__port = port
         self.__timeout = timeout
 
-    def find(self):
+    def find(self, multicast_address=DEFAULT_FIND_MULTICAST_ADDRESS, multicast_port=DEFAULT_FIND_MULTICAST_PORT, multicast_localport=DEFAULT_FIND_LOCAL_PORT):
         """Find a TV on the network
 
         @return [list] the list of discovered TVs
@@ -59,11 +59,11 @@ class RemoteControl:
         udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         udpsock.settimeout(DEFAULT_FIND_TIMEOUT)
         udpsock.setsockopt(socket.IPPROTO_IP, socket.SO_REUSEADDR, True)
-        udpsock.bind((str(socket.INADDR_ANY), DEFAULT_FIND_LOCAL_PORT))
-        udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(DEFAULT_FIND_MULTICAST_ADDRESS) + socket.inet_aton(str(socket.INADDR_ANY)))
+        udpsock.bind((str(socket.INADDR_ANY), multicast_localport))
+        udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(multicast_address) + socket.inet_aton(str(socket.INADDR_ANY)))
         udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
         udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
-        g_logger.debug("UDP Multicast socket ready on request on %s : %d", socket.INADDR_ANY, DEFAULT_FIND_LOCAL_PORT)
+        g_logger.debug("UDP Multicast socket ready on request on %s : %d", socket.INADDR_ANY, multicast_localport)
 
         find_body = (
             'M-SEARCH * HTTP/1.1\r\n'
@@ -71,11 +71,11 @@ class RemoteControl:
             'MAN:"ssdp:discover"\r\n'
             'ST:urn:panasonic-com:device:p00RemoteController:1\r\n'
             'MX:1\r\n\r\n'
-        ).format(address=DEFAULT_FIND_MULTICAST_ADDRESS, port=DEFAULT_FIND_MULTICAST_PORT).encode('utf-8')
+        ).format(address=multicast_address, port=multicast_port).encode('utf-8')
 
         try:
             g_logger.debug("Sending multicast discovery request")
-            udpsock.sendto(find_body, (DEFAULT_FIND_MULTICAST_ADDRESS, DEFAULT_FIND_MULTICAST_PORT))
+            udpsock.sendto(find_body, (multicast_address, multicast_port))
             g_logger.debug("Listen for incoming discovery replies")
             while True:
                 data, addr = udpsock.recvfrom(2048)
