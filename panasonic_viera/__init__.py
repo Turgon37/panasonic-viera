@@ -29,8 +29,11 @@
 
     >>> import panasonic_viera
     >>> rc = panasonic_viera.RemoteControl("192.168.1.2")
-    >>> rc.volume_up()
+    >>> rc.sendKey(panasonic_viera.Keys.APPS)
+    >>> rc.setVolume(30)
 """
+
+__version__ = "1.0.0"
 
 from .remote_control import RemoteControl
 from .constants import Keys
