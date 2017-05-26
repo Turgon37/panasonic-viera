@@ -2,6 +2,7 @@
 
 A set of tools to control your Panasonic Viera TV.
 
+This project is licensed under the terms of the MIT license
 
 
 ## Usage
