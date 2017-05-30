@@ -33,7 +33,9 @@
     >>> rc.setVolume(30)
 """
 
-__version__ = "1.0.0"
+import logging
+import re
+import sys
 
 from .remote_control import RemoteControl
 from .constants import Keys
@@ -43,3 +45,16 @@ from .exceptions import RemoteControlException, UserControlException
 __all__ = ['RemoteControl', 'Keys', 'getLogger',
     'RemoteControlException',
     'UserControlException']
+
+def getOnlineVersion():
+    """Fetch lib version from source repository
+    """
+    if sys.version_info[0] == 3:
+        import urllib.request as urllib
+    else:
+        import urllib2 as urllib
+    content = urllib.urlopen("https://raw.githubusercontent.com/Turgon37/panasonic-viera/master/panasonic_viera/__init__.py").read()
+    result = re.search('__version__\s=\s"(?P<version>[0-9]+\.[0-9]+\.[0-9]+)"', content)
+    if result is not None:
+        return result.group('version')
+    return None
