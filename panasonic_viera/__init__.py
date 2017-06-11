@@ -42,7 +42,7 @@ from .constants import Keys
 from .utils import getLogger
 from .exceptions import RemoteControlException, UserControlException
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 __all__ = ['RemoteControl', 'Keys', 'getLogger',
     'RemoteControlException',
@@ -55,8 +55,8 @@ def getOnlineVersion():
         import urllib.request as urllib
     else:
         import urllib2 as urllib
-    content = urllib.urlopen("https://raw.githubusercontent.com/Turgon37/panasonic-viera/master/panasonic_viera/__init__.py").read()
-    result = re.search('__version__\s=\s"(?P<version>[0-9]+\.[0-9]+\.[0-9]+)"', content)
+    content = urllib.urlopen("https://raw.githubusercontent.com/Turgon37/panasonic-viera/master/panasonic_viera/__init__.py").read().decode()
+    result = re.search('__version__\s=\s["\'](?P<version>[0-9]+\.[0-9]+\.[0-9]+)["\']', content)
     if result is not None:
         return result.group('version')
     return None
