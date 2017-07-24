@@ -32,37 +32,37 @@ require_once __DIR__ . '/exceptions.inc.php';
  * @author pgindraud
  */
 class RemoteControl {
-    
+
     protected $host;
-    
+
     protected $port;
-    
+
     protected $timeout;
-    
+
     public function __construct($host = null, $port = DEFAULT_PORT, $timeout = DEFAULT_TIMEOUT) {
         $this->port = $port;
         $this->host = $host;
         $this->timeout = $timeout;
     }
-    
+
     /**
      * Find a TV on the network
-     * 
+     *
      * @return [list] the list of discovered TVs
      *    This list contains a dict per TV
      *    Each dict contains at least the 'address' key which contains the TV's IP address
      */
     public function find() {
         $tvs = [];
-        
+
         $udpsock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
         socket_set_timeout($udpsock, DEFAULT_FIND_TIMEOUT);
         socket_set_option($udpsock, SOL_SOCKET, SO_REUSEADDR, true);
         socket_bind($udpsock, "", DEFAULT_FIND_LOCAL_PORT);
-        socket_set_option($udpsock, SOL_SOCKET, MCAST_JOIN_GROUP, DEFAULT_FIND_MULTICAST_ADDRESS + "");       
+        socket_set_option($udpsock, SOL_SOCKET, MCAST_JOIN_GROUP, DEFAULT_FIND_MULTICAST_ADDRESS + "");
         socket_set_option($udpsock, SOL_SOCKET, IP_MULTICAST_TTL, 2);
         socket_set_option($udpsock, SOL_SOCKET, IP_MULTICAST_LOOP, 1);
-        
+
         $find_body = sprintf(
             'M-SEARCH * HTTP/1.1\r\n' .
             'HOST:%s:{port}\r\n' .
@@ -71,8 +71,8 @@ class RemoteControl {
             'MX:1\r\n\r\n',
             DEFAULT_FIND_MULTICAST_ADDRESS,
             DEFAULT_FIND_MULTICAST_PORT);
-        
-        
+
+
         //        try:
 //            g_logger.debug("Sending multicast discovery request")
 //            udpsock.sendto(find_body, (DEFAULT_FIND_MULTICAST_ADDRESS, DEFAULT_FIND_MULTICAST_PORT))
@@ -93,13 +93,13 @@ class RemoteControl {
 //            g_logger.info("No more TV's found")
 //        except (socket.error, URLError) as e:
 //            g_logger.fatal(str(e))
-        socket_close($udpsock);       
+        socket_close($udpsock);
         return $tvs;
     }
 
     /**
      * Send a SOAP request to the TV.
-     * 
+     *
      * @param [str] url  the query part of the url
      * @param [str] urn  the resource identifier
      * @param [str] params other query params
@@ -107,7 +107,7 @@ class RemoteControl {
      */
     public function soapRequest($url, $urn, $action, $params) {
         $soap_body = sprintf(
-            '<?xml version="1.0" encoding="utf-8"?>' . 
+            '<?xml version="1.0" encoding="utf-8"?>' .
             '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"' .
             ' s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">' .
             '<s:Body>' .
@@ -117,21 +117,21 @@ class RemoteControl {
             '</s:Body>' .
             '</s:Envelope>',
             $action, $urn, $params, $action);
-        
+
         $headers = [
             sprintf('Host: %s:%s', $this->host, $this->port),
             sprintf('Content-Length: %d', strlen($soap_body)),
             'Content-Type: text/xml; charset="utf-8"',
             sprintf('SOAPAction: "urn:%s#%s"', $urn, $action)
         ];
-        
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, sprintf('http://%s:%d/%s', $this->host, $this->port, $url));
         curl_setopt($ch, CURLOPT_TIMEOUT, DEFAULT_TIMEOUT);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $soap_body);  
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $soap_body);
 
         $res = curl_exec ($ch);
         if ($res === FALSE) {
@@ -140,15 +140,15 @@ class RemoteControl {
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE );
         if ($http_code != 200) {
             throw new UserControlException("This command has failed, maybe the TV does not support it.");
-        }      
+        }
 
         curl_close($ch);
         return $res;
     }
-    
+
     /**
      * Send a key command to the TV.
-     * 
+     *
      * @param [str] key a predefined keys from Keys enum
      */
     public function sendKey($key) {
@@ -159,10 +159,10 @@ class RemoteControl {
         $this->soapRequest(URL_CONTROL_NRC, URN_REMOTE_CONTROL,
                           'X_SendKey', $params);
     }
-    
+
     /**
      * Return the current volume level.
-     * 
+     *
      * @return [int] the volume value
      */
     public function getVolume() {
@@ -184,7 +184,7 @@ class RemoteControl {
 
     /**
      * Set a new volume level
-     * 
+     *
      * @param [int] the new value for volume
      */
     public function setVolume($volume) {
@@ -199,7 +199,7 @@ class RemoteControl {
 
     /**
      * Return if the TV is muted
-     * 
+     *
      * @return [bool] the mute status
      */
     public function getMute() {
@@ -219,7 +219,7 @@ class RemoteControl {
 
     /**
      * Mute or unmute the TV.
-     * 
+     *
      * @param [bool] true if mute must be enabled, false if not
      */
     public function setMute($enable) {
