@@ -16,8 +16,8 @@ else:
     from StringIO import StringIO
 
 # Project imports
-from .constants import Keys
-from .utils import getLogger
+from .constants import Keys, ErrorCodes
+from .utils import *
 from .exceptions import RemoteControlException, UserControlException
 
 # Global vars
@@ -147,10 +147,10 @@ class RemoteControl:
             res = urlopen(req, timeout=self.__timeout).read()
         except HTTPError as e:
             g_logger.fatal(str(e))
-            raise UserControlException("This command has failed, maybe the TV does not support it.")
+            raise UserControlException("This command has failed, maybe the TV does not support it.", ErrorCodes.COMMANDE_NOT_SUPPORTED)
         except (socket.error, socket.timeout, URLError) as e:
             g_logger.fatal(str(e))
-            raise RemoteControlException("The TV is unreacheable.")
+            raise RemoteControlException("The TV is unreacheable.", ErrorCodes.TV_UNREACHEABLE)
         if sys.version_info[0] == 3:
             g_logger.debug("Received response: '''%s'''", res.decode())
         else:

@@ -6,6 +6,12 @@ else:
     Enum = object
 
 
+class ErrorCodes(Enum):
+    """List of error status
+    """
+    COMMANDE_NOT_SUPPORTED = 405
+    TV_UNREACHEABLE = 408
+
 class Keys(Enum):
     """List of static keys values
     """
