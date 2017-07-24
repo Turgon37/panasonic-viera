@@ -3,6 +3,7 @@
 # Systems imports
 import csv
 from email.parser import Parser as HeadersParser
+import re
 import socket
 import sys
 import xml.etree.ElementTree as xml_elm
@@ -28,6 +29,7 @@ URN_REMOTE_CONTROL = 'panasonic-com:service:p00NetworkControl:1'
 
 URL_CONTROL_DMR = 'dmr/control_0'
 URL_CONTROL_NRC = 'nrc/control_0'
+URL_INFORMATION = 'nrc/ddd.xml'
 
 DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 2
@@ -156,6 +158,22 @@ class RemoteControl:
         else:
             g_logger.debug("Received response: '''%s'''", res)
         return res
+
+    def informations(self):
+        """
+        """
+        url = 'http://{}:{}/{}'.format(self.__host, self.__port, URL_INFORMATION)
+        g_logger.debug("Sending request to %s", url)
+        req = Request(url)
+        try:
+            res = urlopen(req, timeout=self.__timeout).read()
+        except HTTPError as e:
+            g_logger.fatal(str(e))
+        except (socket.error, socket.timeout, URLError) as e:
+            g_logger.fatal(str(e))
+            raise RemoteControlException("The TV is unreacheable.", ErrorCodes.TV_UNREACHEABLE)
+        root = xml_elm.fromstring(res)
+        return parseXMLInformations(root)
 
     def sendKey(self, key):
         """Send a key command to the TV.
