@@ -159,21 +159,47 @@ class RemoteControl:
             g_logger.debug("Received response: '''%s'''", res)
         return res
 
-    def informations(self):
+    def http(self, query, host=None, port=None):
+        """Send a HTTP request to the TV.
+
+        @param [str] url  the query part of the url
+        @param [str] OPTIONAL host  the hostname/ip address of the TV
+        @param [str] OPTIONAL port  the port of the TV
+
+        @return [object] the urllib response object
+                    You can use read() on to get the full response body
         """
-        """
-        url = 'http://{}:{}/{}'.format(self.__host, self.__port, URL_INFORMATION)
-        g_logger.debug("Sending request to %s", url)
+        if host is None:
+            host = self.__host
+        if port is None:
+            port = self.__port
+        url = 'http://{}:{}/{}'.format(host, port, query)
+        g_logger.debug("Sending http request to %s", url)
         req = Request(url)
         try:
-            res = urlopen(req, timeout=self.__timeout).read()
+            return urlopen(req, timeout=self.__timeout)
         except HTTPError as e:
             g_logger.fatal(str(e))
         except (socket.error, socket.timeout, URLError) as e:
             g_logger.fatal(str(e))
             raise RemoteControlException("The TV is unreacheable.", ErrorCodes.TV_UNREACHEABLE)
-        root = xml_elm.fromstring(res)
-        return parseXMLInformations(root)
+
+    def informations(self, host=None, port=None):
+        """Retrieve a such amount of informations from the TV
+
+        @param [str] OPTIONAL host  the hostname/ip address of the TV
+        @param [str] OPTIONAL port  the port of the TV
+
+        @return [object] a dict with theses keys
+            'general' => contains some random informations extracted from
+                        main XML specifications
+        """
+        infos = dict()
+
+        root = xml_elm.fromstring(self.http(URL_INFORMATION, host, port).read())
+        infos['general'] = parseXMLInformations(root)
+
+        return infos
 
     def sendKey(self, key):
         """Send a key command to the TV.
