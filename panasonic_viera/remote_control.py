@@ -97,11 +97,14 @@ class RemoteControl:
                 headers = HeadersParser().parsestr(head, True)
                 tv = dict()
                 tv['address'] = addr[0]
+                tv['port'] = addr[1]
                 if tv['address'] in arps:
                     tv['mac'] = arps[tv['address']]
                 else:
                     tv['mac'] = None
                 tv['discovery'] = dict(headers.items())
+                tv['informations'] = self.informations(tv['address'])
+                fillComputedValues(tv)
                 tvs.append(tv)
                 g_logger.info("Found TV %s", tv['address'])
         except (socket.timeout) as e:
