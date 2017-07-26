@@ -24,6 +24,7 @@ def fillComputedValues(tv):
         tv['computed'] = dict()
     fillUUIDFromDiscoverResponse(tv)
     fillNameFromDiscoverResponse(tv)
+    fillModelFromDiscoverResponse(tv)
 
 def fillUUIDFromDiscoverResponse(tv):
     """Try to find the UUID of the TV in headers
@@ -42,3 +43,12 @@ def fillNameFromDiscoverResponse(tv):
         'device' in tv['informations']['general'] and
         'friendlyName' in tv['informations']['general']['device']):
         tv['computed']['name'] = tv['informations']['general']['device']['friendlyName']
+
+def fillModelFromDiscoverResponse(tv):
+    """Try to find the friendly name of the TV in informations
+    """
+    if ('informations' in tv and
+        'general' in tv['informations'] and
+        'device' in tv['informations']['general'] and
+        'modelNumber' in tv['informations']['general']['device']):
+        tv['computed']['model'] = tv['informations']['general']['device']['modelNumber']
