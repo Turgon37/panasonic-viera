@@ -25,6 +25,7 @@ def fillComputedValues(tv):
     fillUUIDFromDiscoverResponse(tv)
     fillNameFromDiscoverResponse(tv)
     fillModelFromDiscoverResponse(tv)
+    fillManufacturerFromDiscoverResponse(tv)
 
 def fillUUIDFromDiscoverResponse(tv):
     """Try to find the UUID of the TV in headers
@@ -45,10 +46,24 @@ def fillNameFromDiscoverResponse(tv):
         tv['computed']['name'] = tv['informations']['general']['device']['friendlyName']
 
 def fillModelFromDiscoverResponse(tv):
-    """Try to find the friendly name of the TV in informations
+    """Try to find the model string of the TV in informations
     """
     if ('informations' in tv and
         'general' in tv['informations'] and
         'device' in tv['informations']['general'] and
         'modelNumber' in tv['informations']['general']['device']):
-        tv['computed']['model'] = tv['informations']['general']['device']['modelNumber']
+        tv['computed']['model_number'] = tv['informations']['general']['device']['modelNumber']
+    if ('informations' in tv and
+        'general' in tv['informations'] and
+        'device' in tv['informations']['general'] and
+        'modelName' in tv['informations']['general']['device']):
+        tv['computed']['model_name'] = tv['informations']['general']['device']['modelName']
+
+def fillManufacturerFromDiscoverResponse(tv):
+    """Try to find the friendly name of the TV in informations
+    """
+    if ('informations' in tv and
+        'general' in tv['informations'] and
+        'device' in tv['informations']['general'] and
+        'manufacturer' in tv['informations']['general']['device']):
+        tv['computed']['manufacturer'] = tv['informations']['general']['device']['manufacturer']
