@@ -50,7 +50,7 @@ class RemoteControl:
         self.__port = port
         self.__timeout = timeout
 
-    def setTimeout(timeout):
+    def setTimeout(self, timeout):
         self.__timeout = timeout
 
     def find(self, multicast_address=DEFAULT_FIND_MULTICAST_ADDRESS, multicast_port=DEFAULT_FIND_MULTICAST_PORT, multicast_localport=DEFAULT_FIND_LOCAL_PORT):
