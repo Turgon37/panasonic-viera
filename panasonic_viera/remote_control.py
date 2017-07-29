@@ -33,7 +33,6 @@ URL_INFORMATION = 'nrc/ddd.xml'
 
 DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 2
-DEFAULT_FIND_TIMEOUT = 3
 
 DEFAULT_FIND_LOCAL_PORT = 60000
 DEFAULT_FIND_MULTICAST_ADDRESS = "239.255.255.250"
@@ -51,6 +50,9 @@ class RemoteControl:
         self.__port = port
         self.__timeout = timeout
 
+    def setTimeout(timeout):
+        self.__timeout = timeout
+
     def find(self, multicast_address=DEFAULT_FIND_MULTICAST_ADDRESS, multicast_port=DEFAULT_FIND_MULTICAST_PORT, multicast_localport=DEFAULT_FIND_LOCAL_PORT):
         """Find a TV on the network
 
@@ -60,7 +62,7 @@ class RemoteControl:
         """
         tvs = []
         udpsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        udpsock.settimeout(DEFAULT_FIND_TIMEOUT)
+        udpsock.settimeout(self.__timeout)
         udpsock.setsockopt(socket.IPPROTO_IP, socket.SO_REUSEADDR, True)
         udpsock.bind((str(socket.INADDR_ANY), multicast_localport))
         udpsock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(multicast_address) + socket.inet_aton(str(socket.INADDR_ANY)))
