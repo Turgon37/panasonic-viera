@@ -42,7 +42,7 @@ from .constants import Keys
 from .utils import getLogger
 from .exceptions import RemoteControlException, UserControlException
 
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 __all__ = ['RemoteControl', 'Keys', 'getLogger',
     'RemoteControlException',
