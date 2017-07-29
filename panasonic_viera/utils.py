@@ -8,13 +8,30 @@ def getLogger():
     return logging.getLogger(__name__)
 
 def parseXMLInformations(element):
-    data = dict()
+    is_list = False
+    last_tag = None
+    # detect list of items
+    for elm in element:
+        if last_tag is not None and last_tag == elm.tag:
+            is_list = True
+        last_tag = elm.tag
+
+    if is_list:
+        data = []
+    else:
+        data = dict()
+
+    # parse the elements
     for elm in element:
         name = re.sub('\{.*\}', '', elm.tag)
         if len(elm) > 0:
-            data[name] = parseXMLInformations(elm)
+            sub_item = parseXMLInformations(elm)
         else:
-            data[name] = elm.text
+            sub_item = elm.text
+        if is_list:
+            data.append(dict({name:sub_item}))
+        else:
+            data[name] = sub_item
     return data
 
 def fillComputedValues(tv):
