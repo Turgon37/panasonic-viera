@@ -51,7 +51,10 @@ class RemoteControl:
         self.__timeout = timeout
 
     def setTimeout(self, timeout):
-        self.__timeout = timeout
+        try:
+            self.__timeout = float(timeout)
+        except ValueError:
+            g_logger.error("Unable to set network timeout with value : %s", timeout)
 
     def find(self, multicast_address=DEFAULT_FIND_MULTICAST_ADDRESS, multicast_port=DEFAULT_FIND_MULTICAST_PORT, multicast_localport=DEFAULT_FIND_LOCAL_PORT):
         """Find a TV on the network
