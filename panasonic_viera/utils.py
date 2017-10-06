@@ -34,6 +34,23 @@ def parseXMLInformations(element):
             data[name] = sub_item
     return data
 
+def getArpTable():
+    arps = dict()
+    arp_file = '/proc/net/arp'
+    logger = getLogger()
+    re_arp = re.compile('(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*(?P<mac>[\da-f]{2}(:[\da-f]{2}){5})')
+    try:
+        f_arp = open(arp_file, 'r')
+        for row in f_arp.readlines():
+            match = re_arp.search(row)
+            if match:
+                result = match.groupdict()
+                arps[result['ip']] = result['mac']
+        logger.debug("Initialized ARP mapping table from file : %s : with %d addresses", arp_file, len(arps))
+    except Exception as e:
+        logger.warning("Unable to access ARP mapping table from file : %s. Because of %s", arp_file, str(e))
+    return arps
+
 def fillComputedValues(tv):
     """Add some computed values into 'computed' key of the given tv dict
     """
